@@ -8,13 +8,18 @@ const PersonForm = ({ props }) => {
         setNewNumber,
         persons,
         setPersons,
+        setMessage,
     } = props;
     const submitHandler = (event) => {
         event.preventDefault();
         //check if it's already in
         setNewName(newName.trim());
         if (!(newName && newNumber)) {
-            return alert("Please fill in full info!");
+            setMessage({
+                positive: false,
+                text: "Please fill in full info!",
+            });
+            return;
         }
         let dupe = false;
         persons.forEach((person) => {
@@ -38,9 +43,11 @@ const PersonForm = ({ props }) => {
                 if (origPerson.number === newNumber) {
                     setNewName("");
                     setNewNumber("");
-                    return alert(
-                        "Same person + same number!"
-                    );
+                    setMessage({
+                        positive: false,
+                        text: "Same person + same number!",
+                    });
+                    return;
                 }
                 const updatedObj = {
                     ...origPerson,
@@ -50,7 +57,10 @@ const PersonForm = ({ props }) => {
                 personService
                     .updatePerson(origPerson.id, updatedObj)
                     .then((res) => {
-                        console.log("updated!");
+                        setMessage({
+                            positive: true,
+                            text: `Successfully updated ${newName}!`,
+                        });
                         setPersons(
                             persons
                                 .filter((person) => {
@@ -62,7 +72,12 @@ const PersonForm = ({ props }) => {
                                 .concat([res])
                         );
                     })
-                    .catch((e) => console.log(e));
+                    .catch((e) =>
+                        setMessage({
+                            positive: false,
+                            text: `${updatedObj.name} already deleted on server!`,
+                        })
+                    );
                 setNewName("");
                 setNewNumber("");
             }
@@ -70,7 +85,7 @@ const PersonForm = ({ props }) => {
             const newObj = {
                 name: newName,
                 number: newNumber,
-                id: persons.length + 1,
+                id: newName,
             };
             personService
                 .addPerson(newObj)
@@ -80,7 +95,10 @@ const PersonForm = ({ props }) => {
                     );
                 })
                 .catch((e) => console.log(e));
-
+            setMessage({
+                positive: true,
+                text: `Successfully added ${newName} to the phone book!`,
+            });
             setNewName("");
             setNewNumber("");
         }
